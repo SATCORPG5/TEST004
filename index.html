@@ -1,202 +1,1547 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="SATCORP: Systems-focused digital experiences and skill deck showcase">
-  <meta property="og:title" content="SATCORP - System Architecture Studio">
-  <meta property="og:description" content="SATCORP designs systems, not graphics. Explore our skill deck.">
-  <link rel="stylesheet" href="styles.css">
-  <title>SATCORP</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SatCorp — Command Interface</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-void: #030508;
+    --bg-station: #080d14;
+    --bg-panel: #0c1520;
+    --bg-module: #111d2b;
+    --bg-hover: #162232;
+    --bg-active: #1a2a3d;
+    --accent-primary: #00d4ff;
+    --accent-secondary: #ff6b35;
+    --accent-tertiary: #7fff4f;
+    --accent-warn: #ffcc00;
+    --accent-danger: #ff3d3d;
+    --text-primary: #e8f4fd;
+    --text-secondary: #7aa8c8;
+    --text-muted: #3d6080;
+    --text-dim: #1e3a52;
+    --border-subtle: rgba(0, 212, 255, 0.08);
+    --border-glow: rgba(0, 212, 255, 0.25);
+    --border-active: rgba(0, 212, 255, 0.6);
+    --shadow-glow: 0 0 20px rgba(0, 212, 255, 0.15);
+    --shadow-intense: 0 0 40px rgba(0, 212, 255, 0.3);
+    --grid-size: 3px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Exo 2', sans-serif;
+    background: var(--bg-void);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    position: relative;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+    animation: gridDrift 20s linear infinite;
+  }
+
+  @keyframes gridDrift {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(40px); }
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: 20%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(ellipse, rgba(0, 212, 255, 0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    animation: nebulaPulse 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes nebulaPulse {
+    0% { opacity: 0.5; transform: scale(1); }
+    100% { opacity: 1; transform: scale(1.1); }
+  }
+
+  /* ========== SIDEBAR: SERVER LIST ========== */
+  .server-rail {
+    width: 72px;
+    background: var(--bg-void);
+    border-right: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 0;
+    gap: 8px;
+    z-index: 10;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .server-logo {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #00d4ff 0%, #0066aa 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: 14px;
+    color: var(--bg-void);
+    cursor: pointer;
+    position: relative;
+    transition: border-radius 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+
+  .server-logo:hover {
+    border-radius: 12px;
+    box-shadow: 0 0 25px rgba(0, 212, 255, 0.7);
+  }
+
+  .server-divider {
+    width: 32px;
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 4px 0;
+  }
+
+  .server-btn {
+    width: 48px;
+    height: 48px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-subtle);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-family: 'Orbitron', monospace;
+    font-weight: 600;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .server-btn:hover {
+    background: var(--bg-active);
+    border-color: var(--border-glow);
+    border-radius: 16px;
+    color: var(--accent-primary);
+    box-shadow: var(--shadow-glow);
+  }
+
+  .server-btn.active {
+    background: var(--bg-active);
+    border-color: var(--accent-primary);
+    border-radius: 16px;
+    color: var(--accent-primary);
+    box-shadow: var(--shadow-glow);
+  }
+
+  .server-btn.active::before {
+    content: '';
+    position: absolute;
+    left: -9px;
+    width: 4px;
+    height: 70%;
+    background: var(--accent-primary);
+    border-radius: 0 3px 3px 0;
+    box-shadow: 0 0 8px var(--accent-primary);
+  }
+
+  .server-btn span { font-size: 8px; line-height: 1.2; }
+
+  .server-btn.add-btn {
+    color: var(--accent-tertiary);
+    border-color: rgba(127, 255, 79, 0.15);
+    font-size: 20px;
+    font-family: monospace;
+  }
+
+  .server-btn.add-btn:hover {
+    background: rgba(127, 255, 79, 0.1);
+    border-color: rgba(127, 255, 79, 0.4);
+    color: var(--accent-tertiary);
+    box-shadow: 0 0 15px rgba(127, 255, 79, 0.2);
+  }
+
+  .notification-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 16px;
+    height: 16px;
+    background: var(--accent-danger);
+    border-radius: 50%;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    color: white;
+    font-weight: 700;
+    border: 2px solid var(--bg-void);
+    box-shadow: 0 0 8px var(--accent-danger);
+  }
+
+  /* ========== CHANNEL SIDEBAR ========== */
+  .channel-sidebar {
+    width: 240px;
+    background: var(--bg-station);
+    border-right: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    z-index: 9;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .server-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    background: var(--bg-station);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .server-header::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+    opacity: 0.5;
+  }
+
+  .server-header-name {
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-primary);
+    letter-spacing: 1px;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+  }
+
+  .server-header-icon {
+    color: var(--text-secondary);
+    font-size: 16px;
+  }
+
+  .channel-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .channel-list::-webkit-scrollbar { width: 4px; }
+  .channel-list::-webkit-scrollbar-track { background: transparent; }
+  .channel-list::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 2px; }
+
+  .channel-category {
+    padding: 16px 8px 4px 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-family: 'Orbitron', monospace;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    user-select: none;
+  }
+
+  .channel-category:hover { color: var(--text-secondary); }
+
+  .channel-category-arrow {
+    font-size: 8px;
+    transition: transform 0.2s;
+  }
+
+  .channel-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px 6px 16px;
+    margin: 1px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    position: relative;
+    border: 1px solid transparent;
+  }
+
+  .channel-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-secondary);
+    border-color: var(--border-subtle);
+  }
+
+  .channel-item.active {
+    background: var(--bg-active);
+    color: var(--text-primary);
+    border-color: var(--border-glow);
+    box-shadow: inset 2px 0 0 var(--accent-primary);
+  }
+
+  .channel-item.active .channel-icon { color: var(--accent-primary); }
+
+  .channel-icon {
+    font-size: 14px;
+    color: var(--text-dim);
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .channel-name { flex: 1; }
+
+  .channel-unread {
+    width: 18px;
+    height: 18px;
+    background: var(--accent-danger);
+    border-radius: 50%;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    box-shadow: 0 0 8px rgba(255, 61, 61, 0.5);
+  }
+
+  .channel-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    position: absolute;
+    left: 6px;
+  }
+
+  /* User panel at bottom */
+  .user-panel {
+    padding: 10px 8px;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-void);
+    position: relative;
+  }
+
+  .user-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+    opacity: 0.3;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00d4ff, #0044aa);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    position: relative;
+    flex-shrink: 0;
+    cursor: pointer;
+    border: 2px solid var(--border-glow);
+  }
+
+  .user-avatar .status-dot {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 10px;
+    height: 10px;
+    background: var(--accent-tertiary);
+    border-radius: 50%;
+    border: 2px solid var(--bg-void);
+    box-shadow: 0 0 6px var(--accent-tertiary);
+  }
+
+  .user-info { flex: 1; min-width: 0; }
+  .user-name {
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Space Mono', monospace;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .user-tag {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .user-controls {
+    display: flex;
+    gap: 4px;
+  }
+
+  .user-ctrl-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+
+  .user-ctrl-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-subtle);
+    color: var(--accent-primary);
+  }
+
+  /* ========== MAIN CONTENT ========== */
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-panel);
+    position: relative;
+    z-index: 5;
+    min-width: 0;
+  }
+
+  /* Channel header */
+  .channel-header {
+    height: 52px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-panel);
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .channel-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+    opacity: 0.2;
+  }
+
+  .header-channel-icon {
+    font-family: 'Space Mono', monospace;
+    color: var(--accent-primary);
+    font-size: 18px;
+    text-shadow: 0 0 10px var(--accent-primary);
+  }
+
+  .header-channel-name {
+    font-family: 'Orbitron', monospace;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    letter-spacing: 0.5px;
+  }
+
+  .header-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border-subtle);
+  }
+
+  .header-topic {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .header-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 4px;
+  }
+
+  .header-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 15px;
+    transition: all 0.15s;
+  }
+
+  .header-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-subtle);
+    color: var(--accent-primary);
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Messages area */
+  .messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .messages-area::-webkit-scrollbar { width: 6px; }
+  .messages-area::-webkit-scrollbar-track { background: transparent; }
+  .messages-area::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 3px; }
+
+  .msg-group {
+    display: flex;
+    gap: 12px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    transition: background 0.1s;
+    position: relative;
+    border: 1px solid transparent;
+  }
+
+  .msg-group:hover {
+    background: var(--bg-module);
+    border-color: var(--border-subtle);
+  }
+
+  .msg-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    margin-top: 2px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+  }
+
+  .msg-avatar:hover { border-color: var(--border-glow); }
+
+  .msg-body { flex: 1; min-width: 0; }
+
+  .msg-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 3px;
+  }
+
+  .msg-author {
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .msg-author:hover { text-decoration: underline; }
+
+  .msg-role {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'Orbitron', monospace;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .role-cmd { background: rgba(0, 212, 255, 0.15); color: var(--accent-primary); border: 1px solid rgba(0,212,255,0.3); }
+  .role-eng { background: rgba(127, 255, 79, 0.12); color: var(--accent-tertiary); border: 1px solid rgba(127,255,79,0.3); }
+  .role-sec { background: rgba(255, 107, 53, 0.12); color: var(--accent-secondary); border: 1px solid rgba(255,107,53,0.3); }
+  .role-ops { background: rgba(255, 204, 0, 0.12); color: var(--accent-warn); border: 1px solid rgba(255,204,0,0.3); }
+  .role-bot { background: rgba(100, 100, 255, 0.15); color: #aaaaff; border: 1px solid rgba(100,100,255,0.3); }
+
+  .msg-time {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .msg-content {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+    word-wrap: break-word;
+  }
+
+  .msg-content .mention {
+    background: rgba(0, 212, 255, 0.12);
+    color: var(--accent-primary);
+    padding: 0 3px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .msg-content .mention:hover { background: rgba(0, 212, 255, 0.25); }
+
+  .msg-content code {
+    background: var(--bg-void);
+    border: 1px solid var(--border-subtle);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-tertiary);
+  }
+
+  .msg-embed {
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: var(--bg-station);
+    border-left: 3px solid var(--accent-primary);
+    border-radius: 0 6px 6px 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    border-left: 3px solid var(--accent-primary);
+    max-width: 400px;
+  }
+
+  .embed-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent-primary);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .embed-field { display: flex; gap: 8px; margin-top: 4px; }
+  .embed-label { color: var(--text-muted); font-family: 'Space Mono', monospace; font-size: 11px; min-width: 80px; }
+  .embed-value { color: var(--text-secondary); font-size: 12px; }
+
+  .status-ok { color: var(--accent-tertiary); }
+  .status-warn { color: var(--accent-warn); }
+  .status-alert { color: var(--accent-danger); }
+
+  .date-separator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0 12px;
+    color: var(--text-dim);
+    font-size: 10px;
+    font-family: 'Orbitron', monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .date-separator::before,
+  .date-separator::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+
+  .system-msg {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    color: var(--text-dim);
+    font-size: 12px;
+    font-family: 'Space Mono', monospace;
+    font-style: italic;
+  }
+
+  .system-msg::before {
+    content: '▸';
+    color: var(--accent-primary);
+    font-size: 10px;
+  }
+
+  /* Message input */
+  .message-input-area {
+    padding: 12px 16px 16px;
+    flex-shrink: 0;
+  }
+
+  .message-input-wrapper {
+    background: var(--bg-module);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 8px 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .message-input-wrapper:focus-within {
+    border-color: var(--border-glow);
+    box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.1), var(--shadow-glow);
+  }
+
+  .input-action-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 16px;
+    transition: color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .input-action-btn:hover { color: var(--accent-primary); }
+
+  .message-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 13.5px;
+    resize: none;
+    min-height: 20px;
+    max-height: 120px;
+    line-height: 1.5;
+    padding: 4px 0;
+  }
+
+  .message-input::placeholder { color: var(--text-dim); }
+
+  .input-send-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border-glow);
+    background: rgba(0, 212, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--accent-primary);
+    font-size: 14px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .input-send-btn:hover {
+    background: rgba(0, 212, 255, 0.2);
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* ========== RIGHT SIDEBAR: MEMBERS ========== */
+  .members-sidebar {
+    width: 240px;
+    background: var(--bg-station);
+    border-left: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    z-index: 9;
+    flex-shrink: 0;
+    overflow-y: auto;
+    padding: 16px 0;
+  }
+
+  .members-sidebar::-webkit-scrollbar { width: 4px; }
+  .members-sidebar::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 2px; }
+
+  .members-category {
+    padding: 8px 8px 4px 16px;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-family: 'Orbitron', monospace;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+
+  .member-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px 6px 12px;
+    margin: 1px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+
+  .member-item:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-subtle);
+  }
+
+  .member-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .member-status {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-station);
+  }
+
+  .online { background: var(--accent-tertiary); box-shadow: 0 0 5px var(--accent-tertiary); }
+  .away { background: var(--accent-warn); box-shadow: 0 0 5px var(--accent-warn); }
+  .busy { background: var(--accent-danger); box-shadow: 0 0 5px var(--accent-danger); }
+  .offline { background: var(--text-dim); }
+
+  .member-info { flex: 1; min-width: 0; }
+
+  .member-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-family: 'Space Mono', monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .member-item:hover .member-name { color: var(--text-primary); }
+
+  .member-subtext {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Scanning line effect */
+  @keyframes scanline {
+    0% { top: -2px; }
+    100% { top: 100%; }
+  }
+
+  .main-content::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(0,212,255,0.4) 50%, transparent 100%);
+    animation: scanline 6s linear infinite;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.4;
+  }
+
+  /* Blinking cursor animation */
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  /* Typing indicator */
+  .typing-indicator {
+    padding: 4px 24px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 20px;
+  }
+
+  .typing-dots span {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    animation: dotBounce 1.4s ease-in-out infinite;
+  }
+
+  .typing-dots span:nth-child(2) { animation-delay: 0.16s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.32s; }
+
+  @keyframes dotBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+
+  /* Welcome banner */
+  .welcome-banner {
+    padding: 32px 24px 16px;
+    margin-bottom: 8px;
+  }
+
+  .welcome-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 0 10px rgba(0,212,255,0.5));
+  }
+
+  .welcome-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 20px rgba(0,212,255,0.4);
+  }
+
+  .welcome-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 500px;
+  }
+
+  .satcorp-hud {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    position: fixed;
+    top: 8px;
+    right: 260px;
+    display: flex;
+    gap: 16px;
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  .hud-item { display: flex; gap: 4px; align-items: center; }
+  .hud-label { color: var(--text-dim); }
+  .hud-value { color: var(--accent-primary); animation: valuePulse 3s ease-in-out infinite alternate; }
+
+  @keyframes valuePulse {
+    0% { opacity: 0.7; }
+    100% { opacity: 1; text-shadow: 0 0 6px var(--accent-primary); }
+  }
+</style>
 </head>
 <body>
-  <!-- Navigation -->
-  <nav id="satcorp-nav">
-    <ul>
-      <li><a href="#home">Home</a></li>
-      <li><a href="#skills">Skill Deck</a></li>
-      <li><a href="#skill-map">Skill Map</a></li>
-      <li><a href="#concierge-sim">Concierge Simulation</a></li>
-      <li><a href="#contact">Contact</a></li>
-    </ul>
-    <button id="toggle-mode">🌙</button>
-  </nav>
 
-  <!-- Hero Section -->
-  <section id="home">
-    <div class="hero">
-      <h1>Welcome to SATCORP</h1>
-      <p>We design systems, not graphics.</p>
-      <button id="explore-btn">Explore SATCORP Systems</button>
-      <!-- Placeholder for animated background -->
-      <canvas id="dynamic-bg"></canvas>
+<!-- HUD overlay -->
+<div class="satcorp-hud">
+  <div class="hud-item"><span class="hud-label">ORBIT</span><span class="hud-value" id="hud-orbit">LEO-7</span></div>
+  <div class="hud-item"><span class="hud-label">SIG</span><span class="hud-value" id="hud-sig">98.2%</span></div>
+  <div class="hud-item"><span class="hud-label">UTC</span><span class="hud-value" id="hud-time">--:--:--</span></div>
+</div>
+
+<!-- Server rail -->
+<div class="server-rail">
+  <div class="server-logo" title="SatCorp HQ">SC</div>
+  <div class="server-divider"></div>
+  <div class="server-btn active" title="SatCorp Main"><span>SAT<br>CORP</span></div>
+  <div class="server-btn" title="Ground Control"><span>GND<br>CTL</span><div class="notification-badge">3</div></div>
+  <div class="server-btn" title="Mission Alpha"><span>MSSI<br>ON-A</span></div>
+  <div class="server-btn" title="R&D Lab"><span>R&D<br>LAB</span></div>
+  <div class="server-divider"></div>
+  <div class="server-btn add-btn" title="Add Server">+</div>
+</div>
+
+<!-- Channel sidebar -->
+<div class="channel-sidebar">
+  <div class="server-header">
+    <span class="server-header-name">SATCORP HQ</span>
+    <span class="server-header-icon">⌄</span>
+  </div>
+
+  <div class="channel-list">
+    <!-- General category -->
+    <div class="channel-category"><span class="channel-category-arrow">▾</span> COMMAND DECK</div>
+    <div class="channel-item active">
+      <span class="channel-icon">#</span>
+      <span class="channel-name">general-comms</span>
     </div>
-  </section>
+    <div class="channel-item">
+      <div class="channel-dot"></div>
+      <span class="channel-icon">#</span>
+      <span class="channel-name">announcements</span>
+      <span class="channel-unread">2</span>
+    </div>
+    <div class="channel-item">
+      <span class="channel-icon">#</span>
+      <span class="channel-name">mission-briefing</span>
+    </div>
+    <div class="channel-item">
+      <span class="channel-icon">🔊</span>
+      <span class="channel-name">command-voice</span>
+    </div>
 
-  <!-- Skill Deck Sections -->
-  <section id="skills">
-    <!-- 12 Skill Sections -->
-    <div class="skill-section" id="core-identity">
-      <h2>Core Identity</h2>
-      <div class="skill-cards">
-        <div class="card">Interactive Card 1</div>
-        <div class="card">Interactive Card 2</div>
-        <div class="card">Interactive Card 3</div>
+    <!-- Engineering category -->
+    <div class="channel-category"><span class="channel-category-arrow">▾</span> ENGINEERING</div>
+    <div class="channel-item">
+      <span class="channel-icon">#</span>
+      <span class="channel-name">systems-status</span>
+    </div>
+    <div class="channel-item">
+      <div class="channel-dot"></div>
+      <span class="channel-icon">#</span>
+      <span class="channel-name">satellite-uplink</span>
+      <span class="channel-unread">7</span>
+    </div>
+    <div class="channel-item">
+      <span class="channel-icon">#</span>
+      <span class="channel-name">propulsion-lab</span>
+    </div>
+    <div class="channel-item">
+      <span class="channel-icon">#</span>
+      <span class="channel-name">telemetry-data</span>
+    </div>
+    <div class="channel-item">
+      <span class="channel-icon">🔊</span>
+      <span class="channel-name">eng-standup</span>
+    </div>
+
+    <!-- Security category -->
+    <div class="channel-category"><span class="channel-category-arrow">▾</span> SECURITY OPS</div>
+    <div class="channel-item">
+      <span class="channel-icon">🔒</span>
+      <span class="channel-name">threat-monitor</span>
+    </div>
+    <div class="channel-item">
+      <span class="channel-icon">🔒</span>
+      <span class="channel-name">classified-ops</span>
+    </div>
+
+    <!-- Ground Ops -->
+    <div class="channel-category"><span class="channel-category-arrow">▾</span> GROUND OPS</div>
+    <div class="channel-item">
+      <span class="channel-icon">#</span>
+      <span class="channel-name">launch-ops</span>
+    </div>
+    <div class="channel-item">
+      <span class="channel-icon">#</span>
+      <span class="channel-name">ground-stations</span>
+    </div>
+    <div class="channel-item">
+      <span class="channel-icon">#</span>
+      <span class="channel-name">mission-control</span>
+    </div>
+    <div class="channel-item">
+      <span class="channel-icon">🔊</span>
+      <span class="channel-name">ops-coordination</span>
+    </div>
+
+    <!-- Misc -->
+    <div class="channel-category"><span class="channel-category-arrow">▾</span> CREW QUARTERS</div>
+    <div class="channel-item">
+      <span class="channel-icon">#</span>
+      <span class="channel-name">off-duty</span>
+    </div>
+    <div class="channel-item">
+      <span class="channel-icon">#</span>
+      <span class="channel-name">media-gallery</span>
+    </div>
+    <div class="channel-item">
+      <span class="channel-icon">#</span>
+      <span class="channel-name">mission-log</span>
+    </div>
+  </div>
+
+  <!-- User panel -->
+  <div class="user-panel">
+    <div class="user-avatar">
+      CDR
+      <div class="status-dot"></div>
+    </div>
+    <div class="user-info">
+      <div class="user-name">Cmdr_Vela</div>
+      <div class="user-tag">#0047 · Online</div>
+    </div>
+    <div class="user-controls">
+      <button class="user-ctrl-btn" title="Mute">🎙</button>
+      <button class="user-ctrl-btn" title="Deafen">🎧</button>
+      <button class="user-ctrl-btn" title="Settings">⚙</button>
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<div class="main-content">
+  <!-- Channel header -->
+  <div class="channel-header">
+    <span class="header-channel-icon">#</span>
+    <span class="header-channel-name">general-comms</span>
+    <div class="header-divider"></div>
+    <span class="header-topic">Primary command communications channel — All personnel</span>
+    <div class="header-actions">
+      <button class="header-btn" title="Thread View">⇄</button>
+      <button class="header-btn" title="Pinned Messages">📌</button>
+      <button class="header-btn" title="Members">👥</button>
+      <button class="header-btn" title="Search">🔍</button>
+    </div>
+  </div>
+
+  <!-- Messages area -->
+  <div class="messages-area" id="messagesArea">
+
+    <div class="welcome-banner">
+      <div class="welcome-icon">🛰️</div>
+      <div class="welcome-title">GENERAL COMMS</div>
+      <div class="welcome-desc">Welcome to #general-comms — the primary communications channel for all SatCorp personnel. Maintain protocol at all times. This is the beginning of this channel's log.</div>
+    </div>
+
+    <div class="date-separator">STARDATE 2026.062 · MISSION DAY 47</div>
+
+    <div class="system-msg">AXIOM-7 uplink restored. Signal at 98.2%</div>
+
+    <div class="msg-group">
+      <div class="msg-avatar" style="background: linear-gradient(135deg, #00d4ff, #0066cc)">CDR</div>
+      <div class="msg-body">
+        <div class="msg-meta">
+          <span class="msg-author" style="color: var(--accent-primary)">Cmdr_Vela</span>
+          <span class="msg-role role-cmd">COMMAND</span>
+          <span class="msg-time">07:14:38 UTC</span>
+        </div>
+        <div class="msg-content">All stations, perform morning telemetry check and report status by 07:30. Priority on AXIOM-7 after last night's anomaly. <span class="mention">@Engineering</span> please confirm propulsion array diagnostics are complete before EOD.</div>
       </div>
     </div>
 
-    <div class="skill-section" id="brand-systems">
-      <h2>Brand Systems</h2>
-      <div class="skill-cards">
-        <div class="card">Interactive Card 1</div>
-        <div class="card">Interactive Card 2</div>
-        <div class="card">Interactive Card 3</div>
+    <div class="msg-group">
+      <div class="msg-avatar" style="background: linear-gradient(135deg, #7fff4f, #228822)">ENG</div>
+      <div class="msg-body">
+        <div class="msg-meta">
+          <span class="msg-author" style="color: var(--accent-tertiary)">ChiefEng_Okafor</span>
+          <span class="msg-role role-eng">ENGINEERING</span>
+          <span class="msg-time">07:19:02 UTC</span>
+        </div>
+        <div class="msg-content">Copy that. Diagnostics at 87% complete. Found a minor oscillation in thruster array B-3 — within acceptable parameters but logging it. Also flagging elevated temperature in solar panel sector 4, <code>SAT-4-THERM-06</code> reading 68°C vs nominal 52°C.</div>
+        <div class="msg-embed">
+          <div class="embed-title">⚡ SYSTEM DIAGNOSTICS — AXIOM-7</div>
+          <div class="embed-field"><span class="embed-label">Propulsion</span><span class="embed-value status-ok">● NOMINAL (87% check)</span></div>
+          <div class="embed-field"><span class="embed-label">Comms Array</span><span class="embed-value status-ok">● ONLINE 98.2%</span></div>
+          <div class="embed-field"><span class="embed-label">Solar Panel S4</span><span class="embed-value status-warn">▲ ELEVATED 68°C</span></div>
+          <div class="embed-field"><span class="embed-label">Thruster B-3</span><span class="embed-value status-warn">▲ MINOR OSCILLATION</span></div>
+          <div class="embed-field"><span class="embed-label">Power Grid</span><span class="embed-value status-ok">● STABLE 94%</span></div>
+        </div>
       </div>
     </div>
 
-    <div class="skill-section" id="web-ui-systems">
-      <h2>Web/UI Systems</h2>
-      <div class="skill-cards">
-        <div class="card">Interactive Card 1</div>
-        <div class="card">Interactive Card 2</div>
-        <div class="card">Interactive Card 3</div>
+    <div class="msg-group">
+      <div class="msg-avatar" style="background: linear-gradient(135deg, #ff6b35, #aa2200)">SEC</div>
+      <div class="msg-body">
+        <div class="msg-meta">
+          <span class="msg-author" style="color: var(--accent-secondary)">SecOps_Ravn</span>
+          <span class="msg-role role-sec">SECURITY</span>
+          <span class="msg-time">07:22:17 UTC</span>
+        </div>
+        <div class="msg-content">Heads up — we picked up anomalous signals at 2.4GHz adjacent to our uplink band during the 03:00-04:00 UTC window. Could be interference or an attempt at signal spoofing. Logging for analysis. <span class="mention">@Cmdr_Vela</span> should I escalate to threat level AMBER?</div>
       </div>
     </div>
 
-    <div class="skill-section" id="systems-architecture">
-      <h2>Systems Architecture</h2>
-      <div class="skill-cards">
-        <div class="card">Interactive Card 1</div>
-        <div class="card">Interactive Card 2</div>
-        <div class="card">Interactive Card 3</div>
+    <div class="msg-group">
+      <div class="msg-avatar" style="background: linear-gradient(135deg, #00d4ff, #0066cc)">CDR</div>
+      <div class="msg-body">
+        <div class="msg-meta">
+          <span class="msg-author" style="color: var(--accent-primary)">Cmdr_Vela</span>
+          <span class="msg-role role-cmd">COMMAND</span>
+          <span class="msg-time">07:23:44 UTC</span>
+        </div>
+        <div class="msg-content">Hold at YELLOW for now. Pull the signal logs and run them through SigInt. If pattern repeats we escalate. Copy all findings to <span class="mention">#threat-monitor</span>.</div>
       </div>
     </div>
 
-    <div class="skill-section" id="streaming-overlay">
-      <h2>Streaming/Overlay</h2>
-      <div class="skill-cards">
-        <div class="card">Interactive Card 1</div>
-        <div class="card">Interactive Card 2</div>
-        <div class="card">Interactive Card 3</div>
+    <div class="msg-group">
+      <div class="msg-avatar" style="background: linear-gradient(135deg, #8888ff, #3333aa)">BOT</div>
+      <div class="msg-body">
+        <div class="msg-meta">
+          <span class="msg-author" style="color: #aaaaff)">SATBOT</span>
+          <span class="msg-role role-bot">BOT</span>
+          <span class="msg-time">07:25:00 UTC</span>
+        </div>
+        <div class="msg-content">📡 Automated alert: AXIOM-7 orbital insertion approaching in <strong>T-02:34:22</strong>. All relevant stations should confirm readiness. Ground stations Kilo-7 and Lima-3 are in tracking range.</div>
+        <div class="msg-embed">
+          <div class="embed-title">🛰 ORBITAL MANEUVER — SCHEDULED</div>
+          <div class="embed-field"><span class="embed-label">Satellite</span><span class="embed-value">AXIOM-7</span></div>
+          <div class="embed-field"><span class="embed-label">Maneuver</span><span class="embed-value">LEO Insertion Burn</span></div>
+          <div class="embed-field"><span class="embed-label">ETA</span><span class="embed-value status-warn">T-02:34:22</span></div>
+          <div class="embed-field"><span class="embed-label">Delta-V Required</span><span class="embed-value">+47.3 m/s</span></div>
+          <div class="embed-field"><span class="embed-label">Confidence</span><span class="embed-value status-ok">99.7%</span></div>
+        </div>
       </div>
     </div>
 
-    <div class="skill-section" id="ai-workflows">
-      <h2>AI Workflows</h2>
-      <div class="skill-cards">
-        <div class="card">Interactive Card 1</div>
-        <div class="card">Interactive Card 2</div>
-        <div class="card">Interactive Card 3</div>
+    <div class="msg-group">
+      <div class="msg-avatar" style="background: linear-gradient(135deg, #ffcc00, #aa7700)">OPS</div>
+      <div class="msg-body">
+        <div class="msg-meta">
+          <span class="msg-author" style="color: var(--accent-warn)">Ops_Teklinski</span>
+          <span class="msg-role role-ops">OPS</span>
+          <span class="msg-time">07:28:53 UTC</span>
+        </div>
+        <div class="msg-content">Kilo-7 confirmed tracking. Lima-3 is spinning up antennas, ETA 12 minutes. We're good for the burn window. <span class="mention">@ChiefEng_Okafor</span> any concerns with that thruster oscillation affecting the delta-V calculation?</div>
       </div>
     </div>
 
-    <div class="skill-section" id="game-development">
-      <h2>Game Development</h2>
-      <div class="skill-cards">
-        <div class="card">Interactive Card 1</div>
-        <div class="card">Interactive Card 2</div>
-        <div class="card">Interactive Card 3</div>
+    <div class="msg-group">
+      <div class="msg-avatar" style="background: linear-gradient(135deg, #7fff4f, #228822)">ENG</div>
+      <div class="msg-body">
+        <div class="msg-meta">
+          <span class="msg-author" style="color: var(--accent-tertiary)">ChiefEng_Okafor</span>
+          <span class="msg-role role-eng">ENGINEERING</span>
+          <span class="msg-time">07:31:07 UTC</span>
+        </div>
+        <div class="msg-content">Oscillation amplitude is ±0.003° — well within burn tolerance. We're good. I'll keep a close eye during the burn and can abort if anything spikes. Propulsion sign-off confirmed ✓</div>
       </div>
     </div>
 
-    <div class="skill-section" id="client-experience">
-      <h2>Client Experience</h2>
-      <div class="skill-cards">
-        <div class="card">Interactive Card 1</div>
-        <div class="card">Interactive Card 2</div>
-        <div class="card">Interactive Card 3</div>
+  </div>
+
+  <!-- Typing indicator -->
+  <div class="typing-indicator">
+    <div class="typing-dots"><span></span><span></span><span></span></div>
+    <span>Ops_Teklinski is typing...</span>
+  </div>
+
+  <!-- Message input -->
+  <div class="message-input-area">
+    <div class="message-input-wrapper">
+      <button class="input-action-btn" title="Attach file">＋</button>
+      <textarea class="message-input" id="msgInput" placeholder="Transmit to #general-comms" rows="1"
+        onkeydown="handleEnter(event)" oninput="autoResize(this)"></textarea>
+      <button class="input-action-btn" title="Emoji">◎</button>
+      <button class="input-action-btn" title="GIF">GIF</button>
+      <button class="input-send-btn" onclick="sendMessage()" title="Send">▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- Members sidebar -->
+<div class="members-sidebar">
+  <div class="members-category">COMMAND — 2 Online</div>
+
+  <div class="member-item">
+    <div class="member-avatar" style="background: linear-gradient(135deg, #00d4ff, #0066cc)">
+      CDR
+      <div class="member-status online"></div>
+    </div>
+    <div class="member-info">
+      <div class="member-name">Cmdr_Vela</div>
+      <div class="member-subtext">In command — Active</div>
+    </div>
+  </div>
+
+  <div class="member-item">
+    <div class="member-avatar" style="background: linear-gradient(135deg, #8866ff, #440099)">
+      XO
+      <div class="member-status online"></div>
+    </div>
+    <div class="member-info">
+      <div class="member-name">XO_Farrant</div>
+      <div class="member-subtext">Reviewing reports</div>
+    </div>
+  </div>
+
+  <div class="members-category">ENGINEERING — 3 Online</div>
+
+  <div class="member-item">
+    <div class="member-avatar" style="background: linear-gradient(135deg, #7fff4f, #228822)">
+      ENG
+      <div class="member-status online"></div>
+    </div>
+    <div class="member-info">
+      <div class="member-name">ChiefEng_Okafor</div>
+      <div class="member-subtext">Running diagnostics</div>
+    </div>
+  </div>
+
+  <div class="member-item">
+    <div class="member-avatar" style="background: linear-gradient(135deg, #5fff99, #117733)">
+      SWE
+      <div class="member-status online"></div>
+    </div>
+    <div class="member-info">
+      <div class="member-name">Dr_Huang</div>
+      <div class="member-subtext">In #propulsion-lab</div>
+    </div>
+  </div>
+
+  <div class="member-item">
+    <div class="member-avatar" style="background: linear-gradient(135deg, #44ffaa, #006633)">
+      TLM
+      <div class="member-status away"></div>
+    </div>
+    <div class="member-info">
+      <div class="member-name">Spcl_Mbeki</div>
+      <div class="member-subtext">Away — Telemetry bay</div>
+    </div>
+  </div>
+
+  <div class="members-category">SECURITY OPS — 1 Online</div>
+
+  <div class="member-item">
+    <div class="member-avatar" style="background: linear-gradient(135deg, #ff6b35, #aa2200)">
+      SEC
+      <div class="member-status busy"></div>
+    </div>
+    <div class="member-info">
+      <div class="member-name">SecOps_Ravn</div>
+      <div class="member-subtext">🔴 Do Not Disturb</div>
+    </div>
+  </div>
+
+  <div class="members-category">GROUND OPS — 2 Online</div>
+
+  <div class="member-item">
+    <div class="member-avatar" style="background: linear-gradient(135deg, #ffcc00, #aa7700)">
+      OPS
+      <div class="member-status online"></div>
+    </div>
+    <div class="member-info">
+      <div class="member-name">Ops_Teklinski</div>
+      <div class="member-subtext">Monitoring Kilo-7</div>
+    </div>
+  </div>
+
+  <div class="member-item">
+    <div class="member-avatar" style="background: linear-gradient(135deg, #ffaa33, #885500)">
+      GND
+      <div class="member-status online"></div>
+    </div>
+    <div class="member-info">
+      <div class="member-name">GrndOps_Patel</div>
+      <div class="member-subtext">Lima-3 station</div>
+    </div>
+  </div>
+
+  <div class="members-category">OFFLINE — 4</div>
+
+  <div class="member-item" style="opacity: 0.4">
+    <div class="member-avatar" style="background: #2a3a4a">
+      R&D
+      <div class="member-status offline"></div>
+    </div>
+    <div class="member-info">
+      <div class="member-name">Dr_Szymanski</div>
+      <div class="member-subtext">Last seen 3h ago</div>
+    </div>
+  </div>
+
+  <div class="member-item" style="opacity: 0.4">
+    <div class="member-avatar" style="background: #2a3a4a">
+      MIS
+      <div class="member-status offline"></div>
+    </div>
+    <div class="member-info">
+      <div class="member-name">Analyst_Chen</div>
+      <div class="member-subtext">Last seen 6h ago</div>
+    </div>
+  </div>
+
+  <div class="member-item" style="opacity: 0.4">
+    <div class="member-avatar" style="background: #2a3a4a">
+      SCI
+      <div class="member-status offline"></div>
+    </div>
+    <div class="member-info">
+      <div class="member-name">Dr_Okonkwo</div>
+      <div class="member-subtext">Last seen 12h ago</div>
+    </div>
+  </div>
+
+  <div class="member-item" style="opacity: 0.4">
+    <div class="member-avatar" style="background: #2a3a4a">
+      BOT
+      <div class="member-status offline"></div>
+    </div>
+    <div class="member-info">
+      <div class="member-name">SATBOT</div>
+      <div class="member-subtext">Automated system</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // UTC Clock
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getUTCHours()).padStart(2,'0');
+    const m = String(now.getUTCMinutes()).padStart(2,'0');
+    const s = String(now.getUTCSeconds()).padStart(2,'0');
+    document.getElementById('hud-time').textContent = `${h}:${m}:${s}`;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // Signal fluctuation
+  setInterval(() => {
+    const sig = (97 + Math.random() * 2).toFixed(1);
+    document.getElementById('hud-sig').textContent = sig + '%';
+  }, 5000);
+
+  // Auto resize textarea
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  function handleEnter(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  const colors = [
+    'linear-gradient(135deg, #00d4ff, #0066cc)',
+    'linear-gradient(135deg, #7fff4f, #228822)',
+    'linear-gradient(135deg, #ff6b35, #aa2200)',
+    'linear-gradient(135deg, #ffcc00, #aa7700)',
+    'linear-gradient(135deg, #ff4488, #aa0044)',
+  ];
+
+  function sendMessage() {
+    const input = document.getElementById('msgInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const area = document.getElementById('messagesArea');
+    const now = new Date();
+    const t = `${String(now.getUTCHours()).padStart(2,'0')}:${String(now.getUTCMinutes()).padStart(2,'0')}:${String(now.getUTCSeconds()).padStart(2,'0')} UTC`;
+
+    // Process mentions
+    let content = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    content = content.replace(/@(\w+)/g, '<span class="mention">@$1</span>');
+    content = content.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    const msg = document.createElement('div');
+    msg.className = 'msg-group';
+    msg.style.animation = 'fadeIn 0.2s ease';
+    msg.innerHTML = `
+      <div class="msg-avatar" style="background: ${colors[0]}">CDR</div>
+      <div class="msg-body">
+        <div class="msg-meta">
+          <span class="msg-author" style="color: var(--accent-primary)">Cmdr_Vela</span>
+          <span class="msg-role role-cmd">COMMAND</span>
+          <span class="msg-time">${t}</span>
+        </div>
+        <div class="msg-content">${content}</div>
       </div>
-    </div>
+    `;
 
-    <div class="skill-section" id="platforms">
-      <h2>Platforms</h2>
-      <div class="skill-cards">
-        <div class="card">Interactive Card 1</div>
-        <div class="card">Interactive Card 2</div>
-        <div class="card">Interactive Card 3</div>
-      </div>
-    </div>
+    area.appendChild(msg);
+    area.scrollTop = area.scrollHeight;
+    input.value = '';
+    input.style.height = 'auto';
+  }
 
-    <div class="skill-section" id="documentation">
-      <h2>Documentation</h2>
-      <div class="skill-cards">
-        <div class="card">Interactive Card 1</div>
-        <div class="card">Interactive Card 2</div>
-        <div class="card">Interactive Card 3</div>
-      </div>
-    </div>
+  // Channel switching
+  document.querySelectorAll('.channel-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.channel-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
 
-    <div class="skill-section" id="asset-delivery">
-      <h2>Asset Delivery</h2>
-      <div class="skill-cards">
-        <div class="card">Interactive Card 1</div>
-        <div class="card">Interactive Card 2</div>
-        <div class="card">Interactive Card 3</div>
-      </div>
-    </div>
+      const icon = item.querySelector('.channel-icon').textContent;
+      const name = item.querySelector('.channel-name').textContent;
 
-    <div class="skill-section" id="ideal-clients">
-      <h2>Ideal Clients</h2>
-      <div class="skill-cards">
-        <div class="card">Interactive Card 1</div>
-        <div class="card">Interactive Card 2</div>
-        <div class="card">Interactive Card 3</div>
-      </div>
-    </div>
-  </section>
+      document.querySelector('.header-channel-name').textContent = name;
+      document.getElementById('msgInput').placeholder = `Transmit to #${name}`;
 
-  <!-- Interactive Skill Map -->
-  <section id="skill-map">
-    <h2>Interactive Skill Map</h2>
-    <canvas id="map-canvas" width="1200" height="600"></canvas>
-    <p class="map-instruction">Hover nodes to see connections. Click a node for details.</p>
-  </section>
+      const unread = item.querySelector('.channel-unread');
+      if (unread) unread.remove();
+      const dot = item.querySelector('.channel-dot');
+      if (dot) dot.remove();
+    });
+  });
 
-  <!-- Concierge Workflow Simulation -->
-  <section id="concierge-sim">
-    <h2>Concierge Workflow Simulation</h2>
-    <div class="workflow-select">
-      <label for="service-select">Select Service:</label>
-      <select id="service-select">
-        <option value="core-identity">Core Identity</option>
-        <option value="brand-systems">Brand Systems</option>
-        <option value="web-ui-systems">Web/UI Systems</option>
-        <option value="systems-architecture">Systems Architecture</option>
-        <option value="streaming-overlay">Streaming/Overlay</option>
-        <option value="ai-workflows">AI Workflows</option>
-        <option value="game-development">Game Development</option>
-        <option value="client-experience">Client Experience</option>
-        <option value="platforms">Platforms</option>
-        <option value="documentation">Documentation</option>
-        <option value="asset-delivery">Asset Delivery</option>
-        <option value="ideal-clients">Ideal Clients</option>
-      </select>
-    </div>
-    <div id="workflow-steps" class="workflow-steps">
-      <div class="step">Step 1: Analysis</div>
-      <div class="step">Step 2: Planning</div>
-      <div class="step">Step 3: Execution</div>
-      <div class="step">Step 4: Delivery</div>
-    </div>
-  </section>
+  // Server switching
+  document.querySelectorAll('.server-btn:not(.add-btn)').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.server-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
 
-  <!-- Footer / Contact -->
-  <footer id="contact">
-    <form action="https://formspree.io/f/your-form-id" method="POST">
-      <input type="text" name="name" placeholder="Name" required>
-      <input type="email" name="email" placeholder="Email" required>
-      <textarea name="message" placeholder="Your inquiry"></textarea>
-      <button type="submit">Send</button>
-    </form>
-    <div class="social-links">
-      <img src="assets/icons/github.svg" alt="GitHub">
-      <img src="assets/icons/linkedin.svg" alt="LinkedIn">
-    </div>
-    <p>© SATCORP 2026 | All rights reserved</p>
-  </footer>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.14.0/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.14.0/ScrollTrigger.min.js"></script>
-  <script src="scripts.js"></script>
+  // Scroll to bottom on load
+  const area = document.getElementById('messagesArea');
+  area.scrollTop = area.scrollHeight;
+</script>
 </body>
 </html>
